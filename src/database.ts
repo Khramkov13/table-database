@@ -12,6 +12,7 @@ export function getDatabase(): Database.Database {
     initializeSchema();
     migrateNameColumn();
     migratePhoneColumn();
+    migrateDepartmentColumn();
   }
   return db;
 }
@@ -24,6 +25,7 @@ function initializeSchema(): void {
       lastName TEXT NOT NULL DEFAULT '',
       email TEXT NOT NULL,
       phone TEXT DEFAULT '',
+      department TEXT DEFAULT '',
       role TEXT DEFAULT '',
       status TEXT DEFAULT 'active',
       created_at TEXT DEFAULT (datetime('now')),
@@ -60,5 +62,14 @@ function migratePhoneColumn(): void {
 
   if (!hasPhone) {
     db.exec(`ALTER TABLE items ADD COLUMN phone TEXT DEFAULT ''`);
+  }
+}
+
+function migrateDepartmentColumn(): void {
+  const columns = db.pragma('table_info(items)') as { name: string }[];
+  const hasDepartment = columns.some((c) => c.name === 'department');
+
+  if (!hasDepartment) {
+    db.exec(`ALTER TABLE items ADD COLUMN department TEXT DEFAULT ''`);
   }
 }
