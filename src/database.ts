@@ -11,6 +11,7 @@ export function getDatabase(): Database.Database {
     db.pragma('journal_mode = WAL');
     initializeSchema();
     migrateNameColumn();
+    migratePhoneColumn();
   }
   return db;
 }
@@ -22,6 +23,7 @@ function initializeSchema(): void {
       firstName TEXT NOT NULL DEFAULT '',
       lastName TEXT NOT NULL DEFAULT '',
       email TEXT NOT NULL,
+      phone TEXT DEFAULT '',
       role TEXT DEFAULT '',
       status TEXT DEFAULT 'active',
       created_at TEXT DEFAULT (datetime('now')),
@@ -49,5 +51,14 @@ function migrateNameColumn(): void {
           ELSE ''
         END
     `);
+  }
+}
+
+function migratePhoneColumn(): void {
+  const columns = db.pragma('table_info(items)') as { name: string }[];
+  const hasPhone = columns.some((c) => c.name === 'phone');
+
+  if (!hasPhone) {
+    db.exec(`ALTER TABLE items ADD COLUMN phone TEXT DEFAULT ''`);
   }
 }

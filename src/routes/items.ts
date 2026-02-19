@@ -11,7 +11,7 @@ interface QueryParams {
   search?: string;
 }
 
-const ALLOWED_SORT_COLUMNS = ['id', 'firstName', 'lastName', 'email', 'role', 'status', 'created_at'];
+const ALLOWED_SORT_COLUMNS = ['id', 'firstName', 'lastName', 'email', 'phone', 'role', 'status', 'created_at'];
 const ALLOWED_SORT_DIRECTIONS = ['asc', 'desc'];
 
 router.get('/', (req: Request<unknown, unknown, unknown, QueryParams>, res: Response) => {
@@ -24,9 +24,9 @@ router.get('/', (req: Request<unknown, unknown, unknown, QueryParams>, res: Resp
   const params: unknown[] = [];
 
   if (req.query.search) {
-    whereClause = 'WHERE firstName LIKE ? OR lastName LIKE ? OR email LIKE ? OR role LIKE ?';
+    whereClause = 'WHERE firstName LIKE ? OR lastName LIKE ? OR email LIKE ? OR phone LIKE ? OR role LIKE ?';
     const searchTerm = `%${req.query.search}%`;
-    params.push(searchTerm, searchTerm, searchTerm, searchTerm);
+    params.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
   }
 
   let orderClause = 'ORDER BY id DESC';
@@ -69,7 +69,7 @@ router.get('/:id', (req: Request, res: Response) => {
 
 router.post('/', (req: Request, res: Response) => {
   const db = getDatabase();
-  const { firstName, lastName, email, role, status } = req.body;
+  const { firstName, lastName, email, phone, role, status } = req.body;
 
   if (!firstName || !lastName || !email) {
     res.status(400).json({ error: 'First name, last name, and email are required' });
@@ -77,8 +77,8 @@ router.post('/', (req: Request, res: Response) => {
   }
 
   const result = db
-    .prepare('INSERT INTO items (firstName, lastName, email, role, status) VALUES (?, ?, ?, ?, ?)')
-    .run(firstName, lastName, email, role || '', status || 'active');
+    .prepare('INSERT INTO items (firstName, lastName, email, phone, role, status) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(firstName, lastName, email, phone || '', role || '', status || 'active');
 
   const item = db.prepare('SELECT * FROM items WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json(item);
@@ -86,7 +86,7 @@ router.post('/', (req: Request, res: Response) => {
 
 router.put('/:id', (req: Request, res: Response) => {
   const db = getDatabase();
-  const { firstName, lastName, email, role, status } = req.body;
+  const { firstName, lastName, email, phone, role, status } = req.body;
 
   if (!firstName || !lastName || !email) {
     res.status(400).json({ error: 'First name, last name, and email are required' });
@@ -100,8 +100,8 @@ router.put('/:id', (req: Request, res: Response) => {
   }
 
   db.prepare(
-    `UPDATE items SET firstName = ?, lastName = ?, email = ?, role = ?, status = ?, updated_at = datetime('now') WHERE id = ?`
-  ).run(firstName, lastName, email, role || '', status || 'active', req.params.id);
+    `UPDATE items SET firstName = ?, lastName = ?, email = ?, phone = ?, role = ?, status = ?, updated_at = datetime('now') WHERE id = ?`
+  ).run(firstName, lastName, email, phone || '', role || '', status || 'active', req.params.id);
 
   const item = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id);
   res.json(item);
